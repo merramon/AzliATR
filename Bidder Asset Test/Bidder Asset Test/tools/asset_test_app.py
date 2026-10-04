@@ -220,14 +220,14 @@ class Handler(BaseHTTPRequestHandler):
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--port", type=int, default=8765)
-    ap.add_argument("--no-browser", action="store_true")
+    ap.add_argument("--port", type=int, default=int(os.environ.get("PORT", 8765)))
+    ap.add_argument("--no-browser", action="store_true", default=True)
     args = ap.parse_args()
 
     JOBS_DIR.mkdir(parents=True, exist_ok=True)
     for port in range(args.port, args.port + 20):
         try:
-            server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+            server = ThreadingHTTPServer(("0.0.0.0", port), Handler)
             break
         except OSError:
             continue

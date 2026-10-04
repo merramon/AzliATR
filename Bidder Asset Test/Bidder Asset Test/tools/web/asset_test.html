@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bidder Asset Test</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1c2430; --muted: #5f6b7a; --line: #e2e6eb;
+    --accent: #2457c5; --accent-soft: #e8eefb;
+    --pass: #1d7a46; --pass-bg: #e3f4ea; --fail: #b42318; --fail-bg: #fde8e6;
+    --review: #8a5a00; --review-bg: #fff3d6;
+    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161c; --panel: #1a2029; --text: #e6e9ee; --muted: #9aa5b4; --line: #2b3340;
+      --accent: #7aa2ff; --accent-soft: #1f2a40;
+      --pass: #5fd394; --pass-bg: #163626; --fail: #ff8a80; --fail-bg: #3d1c1a;
+      --review: #ffcc66; --review-bg: #3a2f12; --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 60px; }
+  header h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -.01em; }
+  header p { margin: 0; color: var(--muted); }
+  .criteria { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 22px; }
+  .chip { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 600; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 18px; }
+  .drop { border: 2px dashed var(--line); border-radius: 10px; padding: 34px 16px; text-align: center; cursor: pointer; transition: .15s; }
+  .drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .drop strong { display: block; font-size: 17px; margin-bottom: 4px; }
+  .drop span { color: var(--muted); font-size: 14px; }
+  .step { display: flex; align-items: baseline; gap: 10px; margin: 0 0 10px; font-size: 16px; }
+  .step b { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%;
+            background: var(--accent); color: var(--panel); font-size: 13px; flex: none; }
+  .step span { color: var(--muted); font-size: 13px; }
+  .step-gap { margin-top: 22px; }
+  .files { list-style: none; padding: 0; margin: 0; }
+  .files li { display: grid; grid-template-columns: 130px 1fr auto; gap: 6px 12px; align-items: center;
+              padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .files li:last-child { border-bottom: 0; }
+  .files select, .files input { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+              background: var(--bg); color: var(--text); font: inherit; }
+  .files input.missing, .files select.dup { border-color: var(--fail); }
+  .files .file { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+  .files .file .fname { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .files .meta { white-space: nowrap; }
+  .files button.rm { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 20px; line-height: 1; padding: 4px 8px; }
+  .empty { color: var(--muted); font-size: 14px; padding: 6px 0; }
+  .company { color: var(--muted); font-size: 13px; }
+  td.company-col { font-size: 13px; min-width: 160px; }
+  .jv-badge, .pill.JV { color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 1px 9px;
+              font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .pill.JV { margin-left: 6px; vertical-align: 1px; }
+  .files li.is-jv { border-left: 3px solid var(--accent); padding-left: 10px; }
+  tr.member td { color: var(--muted); }
+  tr.combined td { font-weight: 700; }
+  @media (max-width: 560px) {
+    .step { flex-wrap: wrap; }
+    .step span { flex-basis: 100%; padding-left: 34px; }
+    .files li { grid-template-columns: 1fr auto; }
+    .files li input { grid-column: 1 / -1; grid-row: 2; }
+    .files .file { grid-row: 3; }
+  }
+  .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; width: 120px; }
+  .bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .4s; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; align-items: center; }
+  .btn { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 10px 18px; font-weight: 600; font-size: 15px; cursor: pointer; text-decoration: none; display: inline-block; }
+  @media (prefers-color-scheme: dark) { .btn { color: #0d1420; } }
+  .btn.secondary { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .status { color: var(--muted); font-size: 14px; }
+  .error { color: var(--fail); background: var(--fail-bg); border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; font-size: 13px; }
+  h2 { font-size: 18px; margin: 0 0 12px; }
+  .summary { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .summary .count { border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 14px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pill { display: inline-block; border-radius: 999px; padding: 2px 10px; font-weight: 700; font-size: 12px; letter-spacing: .03em; }
+  .PASS { color: var(--pass); background: var(--pass-bg); }
+  .FAIL { color: var(--fail); background: var(--fail-bg); }
+  .REVIEW { color: var(--review); background: var(--review-bg); }
+  .ratio-bad { color: var(--fail); font-weight: 600; }
+  .bidder-name { font-weight: 600; }
+  details { margin: 0; }
+  tr.main td { border-bottom: 0; padding-bottom: 2px; }
+  tr.sub td { padding-top: 0; }
+  table.years { width: auto; min-width: 60%; }
+  summary { cursor: pointer; color: var(--accent); font-size: 13px; }
+  .detail { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .detail table { font-size: 13px; margin-top: 6px; }
+  .detail td, .detail th { padding: 6px; }
+  .src a { color: var(--accent); }
+  .notes { font-size: 13px; color: var(--muted); max-width: 320px; }
+  .edit input { width: 120px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--text); text-align: right; font: inherit; }
+  .edit label { display: inline-flex; flex-direction: column; font-size: 12px; margin: 6px 10px 0 0; }
+  .manual { font-size: 12px; color: var(--review); }
+  .hidden { display: none !important; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 20px; }
+  dialog { border: 0; border-radius: 12px; padding: 0; max-width: 95vw; max-height: 92vh; background: var(--panel); }
+  dialog img { display: block; max-width: 92vw; height: auto; }
+  dialog .dlg-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; position: sticky; top: 0; background: var(--panel); border-bottom: 1px solid var(--line); }
+  @media print {
+    .no-print, #upload-panel, details summary { display: none !important; }
+    details[open] > *, details > .detail { display: block; }
+    body { background: #fff; color: #000; }
+    .panel { box-shadow: none; border: 0; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Bidder Asset Test</h1>
+    <p>Check each bidder's financial report for Current Ratio and Quick Ratio — add the PDFs, label them, and run.</p>
+  </header>
+  <div class="criteria" id="criteria"></div>
+
+  <section class="panel" id="upload-panel">
+    <h2 class="step"><b>1</b> Add the financial reports <span>One PDF per company. Scanned reports are fine.</span></h2>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose PDF files">
+      <strong>Drop PDF files here, or click to choose</strong>
+      <span>You can add several files at once.</span>
+    </div>
+    <input type="file" id="picker" accept="application/pdf,.pdf" multiple hidden>
+
+    <h2 class="step step-gap"><b>2</b> Label each report <span>Choose a bidder label for each report — e.g. ABE Daya Bina Enterprise Sdn Bhd → Bidder A. The company name is read from the report automatically.
+      <br>Joint venture? Give each partner's report the same bidder letter — they are tagged A1, A2 and the bid is judged on their combined figures.</span></h2>
+    <ul class="files" id="files"></ul>
+
+    <h2 class="step step-gap"><b>3</b> Run the test</h2>
+    <div class="actions" style="margin-top:0">
+      <button class="btn" id="run" disabled>Run asset test</button>
+      <button class="btn secondary hidden" id="reset">Start over</button>
+      <span class="status" id="status"></span>
+    </div>
+    <div class="error hidden" id="error" style="margin-top:12px"></div>
+  </section>
+
+  <section class="panel hidden" id="results-panel">
+    <h2>Results</h2>
+    <div class="summary" id="summary"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Bidder</th><th>Company</th><th>Year</th><th class="num">Current assets</th><th class="num">Current liabilities</th>
+          <th class="num">Inventory</th><th class="num">Current ratio</th><th class="num">Quick ratio</th><th>Result</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="actions no-print">
+      <a class="btn" id="excel" href="#">Download Excel</a>
+      <button class="btn secondary" onclick="window.print()">Print / Save as PDF</button>
+      <a class="btn secondary" id="log" href="#" target="_blank">Technical log</a>
+    </div>
+  </section>
+
+  <footer>Runs entirely on this computer. Files are not sent to the internet.
+    Figures read from scanned pages are only marked PASS/FAIL when the line items add up to the totals; otherwise the bidder is marked REVIEW.</footer>
+</main>
+
+<dialog id="pageview">
+  <div class="dlg-bar"><strong id="pv-title"></strong><button class="btn secondary" onclick="this.closest('dialog').close()">Close</button></div>
+  <img id="pv-img" alt="Source page">
+</dialog>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let files = [];          // File objects waiting to upload
+let jobId = null;
+let cfg = { current_min: 1, quick_min: 1, basis: "company" };
+
+const fmt = (n) => n == null ? "–" : Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 });
+const fmtRatio = (n) => n == null ? "–" : Number(n).toFixed(2);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+async function loadConfig() {
+  try { cfg = await (await fetch("/api/config")).json(); } catch (e) {}
+  $("criteria").innerHTML =
+    `<span class="chip">Pass: Current ratio ≥ ${cfg.current_min}</span>` +
+    `<span class="chip">Quick ratio ≥ ${cfg.quick_min}</span>` +
+    `<span class="chip">Figures: ${cfg.basis === "group" ? "Group (consolidated)" : "Company"} basis · latest year</span>`;
+}
+
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+// Reports that share a bidder letter are one joint-venture bid; members are tagged A1, A2, ... in list order.
+function bids() {
+  const byLabel = {};
+  files.forEach((f, i) => (byLabel[f.label] = byLabel[f.label] || []).push(i));
+  files.forEach(f => { f.jv = byLabel[f.label].length > 1; });
+  files.forEach(f => {
+    if (f.jv) {
+      const letter = f.label.replace("Bidder ", "");
+      f.tag = letter + (byLabel[f.label].indexOf(files.indexOf(f)) + 1);
+      f.uploadLabel = "Bidder " + f.tag;
+    } else { f.tag = ""; f.uploadLabel = f.label; }
+  });
+  return byLabel;
+}
+
+function labelProblems() {
+  const byLabel = bids();
+  const missing = 0;  // company names are read from the reports; typing one is optional
+  const tooMany = Object.keys(byLabel).filter(l => byLabel[l].length > 9);
+  return { missing, tooMany, byLabel };
+}
+
+function renderFiles(progress) {
+  const byName = Object.fromEntries((progress || []).map(p => [p.bidder, p]));
+  labelProblems();
+  const locked = !!jobId;
+  $("files").innerHTML = files.length ? files.map((f, i) => {
+    const p = byName[f.uploadLabel];
+    let meta = `${(f.file.size / 1048576).toFixed(1)} MB`, pct = null;
+    if (p && p.pages != null) {
+      if (p.done) { meta = `${p.pages} page${p.pages === 1 ? "" : "s"} · ${p.ocr_pages ? "scanned, read" : "ready"}`; pct = 100; }
+      else if (p.ocr_pages) { meta = `Reading scanned pages ${p.ocr_done}/${p.ocr_pages}`; pct = Math.round(100 * p.ocr_done / p.ocr_pages); }
+      else { meta = `${p.pages} pages`; }
+    }
+    const bar = pct == null ? "" : `<div class="bar"><i style="width:${pct}%"></i></div>`;
+    const opts = LETTERS.map(L => `<option ${f.label === "Bidder " + L ? "selected" : ""}>Bidder ${L}</option>`).join("");
+    const placeholder = "Company name — read from the report automatically (or type it)";
+    const jvBadge = f.jv ? `<span class="jv-badge">Joint venture · ${esc(f.tag)}</span>` : "";
+    return `<li class="${f.jv ? "is-jv" : ""}">
+      <select data-i="${i}" aria-label="Bidder label for ${esc(f.file.name)}" ${locked ? "disabled" : ""}>${opts}</select>
+      <input data-i="${i}" type="text" placeholder="${placeholder}" value="${esc(f.company)}"
+             aria-label="Company name for ${esc(f.file.name)}" ${locked ? "disabled" : ""}>
+      ${locked ? "<span></span>" : `<button class="rm" title="Remove this file" aria-label="Remove ${esc(f.file.name)}" data-rm="${i}">×</button>`}
+      <div class="file">📄 <span class="fname">${esc(f.file.name)}</span>${jvBadge}${bar}<span class="meta">${meta}</span></div>
+    </li>`;
+  }).join("") : `<li class="empty" style="display:block">No reports added yet.</li>`;
+
+  // label changes re-render (they can turn rows into a joint venture); typing never re-renders,
+  // or the box being typed in would be replaced
+  $("files").querySelectorAll("select[data-i]").forEach(el => el.onchange = () => { files[+el.dataset.i].label = el.value; renderFiles(progress); });
+  $("files").querySelectorAll("input[data-i]").forEach(el => {
+    el.oninput = () => { files[+el.dataset.i].company = el.value; updateRunState(); };
+    el.onblur = () => { files[+el.dataset.i].touched = true; updateRunState(); };
+  });
+  $("files").querySelectorAll("button[data-rm]").forEach(b => b.onclick = () => { files.splice(+b.dataset.rm, 1); renderFiles(); });
+  updateRunState();
+}
+
+function updateRunState() {
+  if (jobId) { $("run").disabled = true; return; }
+  const { missing, tooMany, byLabel } = labelProblems();
+  $("files").querySelectorAll("input[data-i]").forEach(el => {
+    const f = files[+el.dataset.i];
+    el.classList.remove("missing");
+  });
+  $("run").disabled = !files.length || missing > 0 || tooMany.length > 0;
+  const nBids = Object.keys(byLabel).length, nJv = Object.values(byLabel).filter(x => x.length > 1).length;
+  let hint = "";
+  if (!files.length) hint = "Add at least one PDF to start.";
+  else if (tooMany.length) hint = `${tooMany.join(", ")} has more than 9 reports.`;
+  else if (missing) hint = `Type the company name for ${missing} report${missing > 1 ? "s" : ""}.`;
+  else hint = `Ready: ${files.length} report${files.length > 1 ? "s" : ""}, ${nBids} bid${nBids > 1 ? "s" : ""}` +
+              (nJv ? ` (${nJv} joint venture${nJv > 1 ? "s" : ""}).` : ".");
+  $("status").textContent = hint;
+}
+
+function addFiles(list) {
+  if (jobId) return;
+  for (const f of list) {
+    if (!/\.pdf$/i.test(f.name)) continue;
+    if (files.some(x => x.file.name.toLowerCase() === f.name.toLowerCase() && x.file.size === f.size)) continue;
+    const used = new Set(files.map(x => x.label));
+    const next = LETTERS.find(L => !used.has("Bidder " + L)) || "Z";
+    files.push({ file: f, label: "Bidder " + next, company: "", touched: false });
+  }
+  renderFiles();
+}
+
+const drop = $("drop");
+drop.onclick = () => $("picker").click();
+drop.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("picker").click(); } };
+$("picker").onchange = (e) => { addFiles(e.target.files); e.target.value = ""; };
+["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+
+function showError(msg) { $("error").textContent = msg; $("error").classList.remove("hidden"); }
+
+$("run").onclick = async () => {
+  $("error").classList.add("hidden");
+  $("run").disabled = true;
+  try {
+    jobId = (await (await fetch("/api/jobs", { method: "POST" })).json()).job;
+    renderFiles();
+    bids();
+    for (let i = 0; i < files.length; i++) {
+      $("status").textContent = `Uploading ${i + 1} of ${files.length}…`;
+      const f = files[i];
+      const r = await fetch(`/api/jobs/${jobId}/files`, {
+        method: "POST", body: f.file, headers: {
+          "X-Filename": encodeURIComponent(f.file.name), "X-Label": encodeURIComponent(f.uploadLabel),
+          "X-Group": f.jv ? encodeURIComponent(f.label) : "",
+          "X-Company": encodeURIComponent(f.company.trim()) } });
+      const j = await r.json();
+      if (!r.ok) throw new Error(`${f.uploadLabel} (${f.file.name}): ${j.error}`);
+    }
+    await fetch(`/api/jobs/${jobId}/run`, { method: "POST" });
+    $("reset").classList.remove("hidden");
+    poll();
+  } catch (e) {
+    showError(e.message); jobId = null; renderFiles();
+  }
+};
+
+$("reset").onclick = () => {
+  files = []; jobId = null; renderFiles();
+  $("reset").classList.add("hidden");
+  $("results-panel").classList.add("hidden"); $("error").classList.add("hidden");
+};
+
+async function poll() {
+  const myJob = jobId;
+  if (!myJob) return;
+  let s;
+  try { s = await (await fetch(`/api/jobs/${myJob}`)).json(); }
+  catch (e) { showError("Lost connection to the app. Is the Asset Test window still open?"); return; }
+  if (myJob !== jobId) return;
+  renderFiles(s.files);
+  if (s.state === "done") {
+    // show the company names read from the JV partners' reports in the label list too
+    const found = {};
+    (s.results.bidders || []).forEach(rows => { found[rows[0].bidder] = rows[0].company;
+      (rows[0].member_rows || []).forEach(mr => { found[mr[0].bidder] = mr[0].company; }); });
+    files.forEach(f => { if (!f.company.trim() && found[f.uploadLabel]) f.company = found[f.uploadLabel]; });
+    renderFiles(s.files);
+    $("status").textContent = "Finished."; renderResults(s.results); return;
+  }
+  if (s.state === "error") { $("status").textContent = ""; showError(s.error); return; }
+  $("status").textContent = s.stage + "… (scanned reports take a few seconds per page)";
+  setTimeout(poll, 1500);
+}
+
+function pageLink(bidder, src) {
+  const m = /^p\.(\d+)/.exec(src || "");
+  if (!m) return esc(src || "");
+  return `<a href="#" data-bidder="${esc(bidder)}" data-page="${m[1]}">p.${m[1]}</a>${esc(src.slice(m[0].length))}`;
+}
+
+function evaluateRow(r) {
+  const ca = r.current_assets, cl = r.current_liabilities, inv = r.inventory ?? 0;
+  if (ca == null || cl == null || cl <= 0) return { cr: null, qr: null, result: "REVIEW" };
+  const cr = ca / cl, qr = (ca - inv) / cl;
+  return { cr, qr, result: cr >= cfg.current_min && qr >= cfg.quick_min ? "PASS" : "FAIL" };
+}
+
+// Same rule as evaluate_ratios.py combine_jv: add the members' latest-year figures, then compute the ratios.
+function combineJV(r) {
+  const ms = r.member_rows.map(rows => rows[0]);
+  if (ms.some(m => m.current_assets == null || m.current_liabilities == null)) {
+    Object.assign(r, { current_assets: null, current_liabilities: null, inventory: null, current_ratio: null, quick_ratio: null, result: "REVIEW" });
+    return;
+  }
+  r.current_assets = ms.reduce((t, m) => t + m.current_assets, 0);
+  r.current_liabilities = ms.reduce((t, m) => t + m.current_liabilities, 0);
+  r.inventory = ms.reduce((t, m) => t + (m.inventory ?? 0), 0);
+  const ev = evaluateRow(r);
+  r.current_ratio = ev.cr; r.quick_ratio = ev.qr;
+  r.result = ms.some(m => m.result === "REVIEW") ? "REVIEW" : ev.result;
+}
+
+const tagOf = (bidder) => bidder.replace("Bidder ", "");
+const prettyNotes = (r) => (r.notes || []).filter(Boolean)
+  .map(n => n.replace(/\b(current_assets|current_liabilities|inventory)\b/g, m => m.replace("_", " ")));
+const sourcesOf = (r, prefix = "") => ["current_assets", "current_liabilities", "inventory"].filter(k => r[k + "_src"])
+  .map(k => `<div class="src">${prefix}<b>${k.replace("_", " ")}:</b> ${pageLink(r.bidder, r[k + "_src"])}</div>`).join("");
+const ratioCells = (r) => `<td class="num">${fmt(r.current_assets)}</td><td class="num">${fmt(r.current_liabilities)}</td>
+  <td class="num">${fmt(r.inventory)}</td><td class="num">${fmtRatio(r.current_ratio)}</td><td class="num">${fmtRatio(r.quick_ratio)}</td>`;
+const editInputs = (bi, mi, r, title) => `<div>${title ? `<b>${esc(title)}</b><br>` : ""}
+  <label>Current assets<input type="number" step="any" data-b="${bi}" data-m="${mi}" data-k="current_assets" value="${r.current_assets ?? ""}"></label>
+  <label>Current liabilities<input type="number" step="any" data-b="${bi}" data-m="${mi}" data-k="current_liabilities" value="${r.current_liabilities ?? ""}"></label>
+  <label>Inventory<input type="number" step="any" data-b="${bi}" data-m="${mi}" data-k="inventory" value="${r.inventory ?? 0}"></label></div>`;
+
+function renderResults(res) {
+  if (res) { cfg.current_min = res.current_min; cfg.quick_min = res.quick_min; }
+  const bidders = res.bidders;
+  const counts = { PASS: 0, FAIL: 0, REVIEW: 0 };
+  bidders.forEach(rows => counts[rows[0].result]++);
+  $("summary").innerHTML = ["PASS", "FAIL", "REVIEW"].filter(k => counts[k])
+    .map(k => `<span class="count ${k}">${counts[k]} ${k}</span>`).join("");
+  const companyOf = {};
+  bidders.forEach(rows => { companyOf[rows[0].bidder] = rows[0].company;
+    (rows[0].member_rows || []).forEach(mr => { companyOf[mr[0].bidder] = mr[0].company; }); });
+
+  $("rows").innerHTML = bidders.map((rows, bi) => {
+    const r = rows[0];
+    const crBad = r.current_ratio != null && r.current_ratio < cfg.current_min;
+    const qrBad = r.quick_ratio != null && r.quick_ratio < cfg.quick_min;
+    const notes = prettyNotes(r);
+    let nameCell, companyCell, detailBody, edit = "";
+    if (r.jv) {
+      const ms = r.member_rows.map(mr => mr[0]);
+      nameCell = `<div class="bidder-name">${esc(r.bidder)}<span class="pill JV">JV</span></div>`;
+      companyCell = ms.map(m => `<div>${esc(tagOf(m.bidder))}: ${esc(m.company || "name not found in report")}</div>`).join("");
+      detailBody = `
+        <div class="table-wrap"><table class="years"><tr><th>Member</th><th>Year</th><th class="num">Current assets</th>
+          <th class="num">Current liab.</th><th class="num">Inventory</th><th class="num">Current</th><th class="num">Quick</th><th></th></tr>
+          ${ms.map(m => `<tr class="member"><td>${esc(tagOf(m.bidder))} – ${esc(m.company || "")}</td><td>${esc(m.year)}</td>${ratioCells(m)}
+            <td><span class="pill ${m.result}">${m.result}</span></td></tr>`).join("")}
+          <tr class="combined"><td>Combined (JV)</td><td></td>${ratioCells(r)}<td><span class="pill ${r.result}">${r.result}</span></td></tr>
+        </table></div>
+        <div style="margin-top:6px">Member results are for information — the bid is judged on the combined figures.</div>
+        ${ms.map(m => prettyNotes(m).length ? `<div><b>${esc(tagOf(m.bidder))}:</b> ${prettyNotes(m).map(esc).join("; ")}</div>` : "").join("")}
+        ${ms.map(m => sourcesOf(m, `<b>${esc(tagOf(m.bidder))}</b> · `)).join("")}`;
+      if (r.result === "REVIEW") edit = `<div class="edit no-print">Check the source pages, then enter the correct figures:
+        ${ms.map((m, mi) => editInputs(bi, mi, m, `${tagOf(m.bidder)} – ${m.company || ""}`)).join("")}
+        <button class="btn secondary" data-apply="${bi}">Recalculate</button></div>`;
+    } else {
+      nameCell = `<div class="bidder-name">${esc(r.bidder)}</div>`;
+      companyCell = esc(r.company || "name not found in report");
+      const years = rows.map(y => `<tr><td>${esc(y.year)}</td>${ratioCells(y)}<td><span class="pill ${y.result}">${y.result}</span></td></tr>`).join("");
+      detailBody = `${sourcesOf(r)}
+        ${rows.length > 1 ? `<div class="table-wrap"><table class="years"><tr><th>Year</th><th class="num">Current assets</th><th class="num">Current liab.</th><th class="num">Inventory</th><th class="num">Current</th><th class="num">Quick</th><th></th></tr>${years}</table></div>` : ""}`;
+      if (r.result === "REVIEW") edit = `<div class="edit no-print">Check the source page, then enter the correct figures:
+        ${editInputs(bi, "", r, "")}<button class="btn secondary" data-apply="${bi}">Recalculate</button></div>`;
+    }
+    return `<tr class="main">
+      <td>${nameCell}${r.manual ? '<div class="manual">Figures entered manually on this page</div>' : ""}</td>
+      <td class="company-col">${companyCell}</td>
+      <td>${esc(r.year)}</td>
+      <td class="num">${fmt(r.current_assets)}</td>
+      <td class="num">${fmt(r.current_liabilities)}</td>
+      <td class="num">${fmt(r.inventory)}</td>
+      <td class="num ${crBad ? "ratio-bad" : ""}">${fmtRatio(r.current_ratio)}</td>
+      <td class="num ${qrBad ? "ratio-bad" : ""}">${fmtRatio(r.quick_ratio)}</td>
+      <td><span class="pill ${r.result}">${r.result}</span></td></tr>
+      <tr class="sub"><td colspan="9">
+        <details ${r.result === "REVIEW" ? "open" : ""}><summary>Details &amp; sources</summary>
+          <div class="detail">
+            ${notes.length ? `<div>${notes.map(esc).join("<br>")}</div>` : ""}
+            ${detailBody}
+            ${edit}
+          </div></details></td></tr>`;
+  }).join("");
+
+  $("rows").querySelectorAll("a[data-page]").forEach(a => a.onclick = (e) => {
+    e.preventDefault();
+    const co = companyOf[a.dataset.bidder];
+    $("pv-title").textContent = `${a.dataset.bidder}${co ? " – " + co : ""} — page ${a.dataset.page}`;
+    $("pv-img").src = `/api/jobs/${jobId}/page?bidder=${encodeURIComponent(a.dataset.bidder)}&page=${a.dataset.page}`;
+    $("pageview").showModal();
+  });
+  $("rows").querySelectorAll("button[data-apply]").forEach(b => b.onclick = () => {
+    const bi = +b.dataset.apply, r = bidders[bi][0];
+    $("rows").querySelectorAll(`input[data-b="${bi}"]`).forEach(inp => {
+      const target = inp.dataset.m === "" ? r : r.member_rows[+inp.dataset.m][0];
+      target[inp.dataset.k] = inp.value === "" ? null : Number(inp.value);
+    });
+    const fixNotes = ["Figures entered manually after checking the source page"];
+    if (r.jv) {
+      r.member_rows.forEach(mr => { const m = mr[0], ev = evaluateRow(m);
+        Object.assign(m, { current_ratio: ev.cr, quick_ratio: ev.qr, result: ev.result });
+        if (ev.result !== "REVIEW") m.notes = fixNotes; });
+      combineJV(r);
+      r.manual = true;
+      if (r.result !== "REVIEW") r.notes = [r.notes[0], ...fixNotes];
+    } else {
+      const ev = evaluateRow(r);
+      Object.assign(r, { current_ratio: ev.cr, quick_ratio: ev.qr, result: ev.result, manual: true });
+      if (ev.result !== "REVIEW") r.notes = fixNotes;
+    }
+    renderResults(res);
+  });
+
+  $("excel").href = `/api/jobs/${jobId}/excel`;
+  $("log").href = `/api/jobs/${jobId}/log`;
+  $("results-panel").classList.remove("hidden");
+  $("results-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+loadConfig();
+renderFiles();
+</script>
+</body>
+</html>

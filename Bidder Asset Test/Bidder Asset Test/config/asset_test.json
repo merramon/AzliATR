@@ -1,0 +1,11 @@
+{
+  "_comment": "Asset test settings. Set each 'minimum' from the tender document; null = not set yet (results show NOT SET instead of PASS/FAIL).",
+  "current_ratio": {
+    "minimum": 1.0
+  },
+  "quick_ratio": {
+    "minimum": 1.0
+  },
+  "_statement_basis_comment": "When a report shows both Group and Company columns, which to use: 'company' (the bidding entity itself) or 'group' (consolidated).",
+  "statement_basis": "company"
+}

@@ -1,0 +1,64 @@
+BIDDER ASSET TEST - HOW TO USE
+==============================
+
+What it does
+------------
+Reads each bidder's financial report (PDF, scanned is fine) and checks:
+  - Current Ratio = Current Assets / Current Liabilities   (pass mark 1.0)
+  - Quick Ratio   = (Current Assets - Inventory) / Current Liabilities   (pass mark 1.0)
+Everything runs on this computer. The PDFs are NOT sent to the internet.
+
+
+START THE APP
+-------------
+Mac:      double-click  "Asset Test.command"
+Windows:  double-click  "Asset Test (Windows).bat"
+
+A black window opens, then the app opens in your web browser.
+Keep the black window open while you use the app. Close it when you are done.
+
+FIRST TIME ON A NEW COMPUTER: the app sets itself up automatically.
+It needs internet and takes about 5 minutes. No admin password needed.
+After that it starts in a few seconds and works without internet.
+
+If the Mac says the file "cannot be opened" / "unidentified developer":
+  right-click "Asset Test.command" -> Open -> Open.
+  (Newer Macs: System Settings -> Privacy & Security -> scroll down -> "Open Anyway".)
+If Windows shows "Windows protected your PC":
+  click "More info" -> "Run anyway".
+
+
+USING IT
+--------
+1. Add the reports   - drag the PDF files onto the page (or click to choose them).
+                       One PDF per company.
+2. Label each report - for every file pick a label (Bidder A, Bidder B, ...).
+                       Example: ABE Daya Bina Enterprise Sdn Bhd -> Bidder A
+                       The company name is read from the report automatically
+                       (you can type it instead if you prefer).
+
+   JOINT VENTURE (one bid, two or more companies):
+                       give each partner's report the SAME bidder letter,
+                       e.g. both reports -> Bidder A.
+                       They are tagged A1, A2 automatically. The bid is judged on the partners'
+                       COMBINED figures:
+                         Current ratio = (CA of A1 + CA of A2) / (CL of A1 + CL of A2)
+                         Quick ratio   = (CA - Inventory, both added) / (CL, both added)
+3. Run the test      - click "Run asset test".
+                       Scanned reports take a few seconds per page
+                       (a 90-page report takes a few minutes).
+
+Results:
+  PASS / FAIL  - both ratios checked against the pass mark (latest year).
+  REVIEW       - the app could not confirm the figures (the numbers did not add up).
+                 Open "Details & sources", click the page number to see the
+                 balance sheet, type the correct figures and click "Recalculate".
+  "Download Excel" saves the results (bidder label and company name in separate columns). "Print / Save as PDF" saves the page
+  (use this if you corrected any figures on the page).
+
+
+CHANGING THE PASS MARK
+----------------------
+Open config/asset_test.json in a text editor and change the "minimum" values.
+"statement_basis": "company" uses the company's own figures when a report shows
+both Group and Company columns ("group" uses the consolidated figures).
